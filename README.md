@@ -7,9 +7,10 @@ This script support migrating the following data:
  - Repositories & Wiki
  - Milestones
  - Labels
- - Issues
+ - Issues (no comments)
  - Users
  - Groups
+ - Public SSH keys
 
 ## Usage
 Change items in the config section of the script.
