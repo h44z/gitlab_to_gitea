@@ -4,11 +4,11 @@ This script uses the Gitlab and Gitea API's to migrate all data from
 Gitlab to Gitea.
 
 This script support migrating the following data:
- - Repositories & Wiki
+ - Repositories & Wiki (fork status is lost)
  - Milestones
  - Labels
  - Issues (no comments)
- - Users
+ - Users (no profile pictures)
  - Groups
  - Public SSH keys
 
