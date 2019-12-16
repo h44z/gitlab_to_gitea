@@ -15,4 +15,5 @@ This script support migrating the following data:
 ## Usage
 Change items in the config section of the script.
 
-Install all dependencies and use python3 to execute the script.
+Install all dependencies via `python -m pip install -r requirements.txt` and
+use python3 to execute the script.
