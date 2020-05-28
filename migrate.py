@@ -134,13 +134,17 @@ def get_collaborators(gitea_api: pygitea, owner: string, repo: string) -> []:
     return existing_collaborators
 
 
-def get_user_or_group(gitea_api: pygitea, name: string) -> {}:
+def get_user_or_group(gitea_api: pygitea, project: gitlab.v4.objects.Project) -> {}:
     result = None
-    response: requests.Response = gitea_api.get("/users/" + name)
+    response: requests.Response = gitea_api.get("/users/" + project.namespace['path'])
     if response.ok:
         result = response.json()
     else:
-        print_error("Failed to load user or group " + name + "! " + response.text)
+        response: requests.Response = gitea_api.get("/orgs/" + name_clean(project.namespace["name"]))
+        if response.ok:
+            result = response.json()
+        else:
+            print_error("Failed to load user or group " + project.namespace["name"] + "! " + response.text)
 
     return result
 
@@ -382,7 +386,7 @@ def _import_project_repo(gitea_api: pygitea, project: gitlab.v4.objects.Project)
         private = project.visibility == 'private' or project.visibility == 'internal'
 
         # Load the owner (users and groups can both be fetched using the /users/ endpoint)
-        owner = get_user_or_group(gitea_api, project.namespace['name'])
+        owner = get_user_or_group(gitea_api, project)
         if owner:
             import_response: requests.Response = gitea_api.post("/repos/migrate", json={
                 "auth_password": GITLAB_ADMIN_PASS,
