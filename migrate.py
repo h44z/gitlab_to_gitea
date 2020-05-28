@@ -617,7 +617,7 @@ def print_error(message):
 
 def name_clean(name):
     newName = name.replace(" ", "_")
-    newName = re.sub(r"[^a-zA-Z0-9_]", "-", newName)
+    newName = re.sub(r"[^a-zA-Z0-9_-\.]", "-", newName)
 
     if (newName.lower() == "plugins"):
         return newName + "-user"
