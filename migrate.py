@@ -376,7 +376,7 @@ def _import_project_issues(gitea_api: pygitea, issues: [gitlab.v4.objects.Projec
 def _import_project_repo(gitea_api: pygitea, project: gitlab.v4.objects.Project):
     if not repo_exists(gitea_api, project.namespace['name'], project.name):
         clone_url = project.http_url_to_repo
-        if GITLAB_ADMIN_PASS is '' and GITLAB_ADMIN_USER is '':
+        if GITLAB_ADMIN_PASS == '' and GITLAB_ADMIN_USER == '':
             clone_url = project.ssh_url_to_repo
         private = project.visibility == 'private' or project.visibility == 'internal'
 
