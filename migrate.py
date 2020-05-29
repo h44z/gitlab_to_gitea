@@ -41,7 +41,7 @@ def main():
     gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN)
     gl.auth()
     assert(isinstance(gl.user, gitlab.v4.objects.CurrentUser))
-
+    print_info("Connected to Gitlab, version: " + str(gl.version()))
 
     gt = pygitea.API(GITEA_URL, token=GITEA_TOKEN)
     gt_version = gt.get('/version').json()
@@ -438,9 +438,14 @@ def _import_users(gitea_api: pygitea, users: [gitlab.v4.objects.User], notify: b
         print("Found " + str(len(keys)) + " public keys for user " + user.username)
 
         if not user_exists(gitea_api, user.username):
-            tmp_password = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+            tmp_password = 'Tmp1!' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+            tmp_email = user.username + '@noemail-git.local'  # Some gitlab instances do not publish user emails
+            try:
+                tmp_email = user.email
+            except AttributeError:
+                pass
             import_response: requests.Response = gitea_api.post("/admin/users", json={
-                "email": user.email,
+                "email": tmp_email,
                 "full_name": user.name,
                 "login_name": user.username,
                 "password": tmp_password,
