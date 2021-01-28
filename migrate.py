@@ -390,11 +390,17 @@ def _import_project_repo(gitea_api: pygitea, project: gitlab.v4.objects.Project)
         # Load the owner (users and groups can both be fetched using the /users/ endpoint)
         owner = get_user_or_group(gitea_api, project)
         if owner:
+            description = project.description
+
+            if description is not None and len(description) > 255:
+                description = description[:255]
+                print_warning(f"Description of {name_clean(project.name)} had to be truncated to 255 characters!")
+
             import_response: requests.Response = gitea_api.post("/repos/migrate", json={
                 "auth_password": GITLAB_ADMIN_PASS,
                 "auth_username": GITLAB_ADMIN_USER,
                 "clone_addr": clone_url,
-                "description": project.description,
+                "description": description,
                 "mirror": False,
                 "private": private,
                 "repo_name": name_clean(project.name),
