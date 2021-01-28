@@ -139,7 +139,9 @@ def get_user_or_group(gitea_api: pygitea, project: gitlab.v4.objects.Project) ->
     response: requests.Response = gitea_api.get("/users/" + name_clean(project.namespace['path']))
     if response.ok:
         result = response.json()
-    else:
+
+    # The api may return a 200 response, even if it's not a user but an org, let's try again!
+    if result is None or result["id"] == 0:
         response: requests.Response = gitea_api.get("/orgs/" + name_clean(project.namespace["name"]))
         if response.ok:
             result = response.json()
