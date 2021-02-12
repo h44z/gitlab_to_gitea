@@ -31,3 +31,10 @@ python3 -m pip install -r requirements.txt
 ```
 
 Then start the migration script `python3 migrate.py`.
+
+## Customization
+You can adapt user authentication in migrate.py line 489
+Exemple if you added LDAP as authentication
+                "must_change_password": False, # LDAP users don't have to change password
+                "source_id": 1, # My LDAP BIND DN source number
+                
