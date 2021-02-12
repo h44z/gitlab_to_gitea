@@ -558,34 +558,39 @@ def import_projects(gitlab_api: gitlab.Gitlab, gitea_api: pygitea):
     print("Found " + str(len(projects)) + " gitlab projects as user " + gitlab_api.user.username)
 
     for project in projects:
-        collaborators: [gitlab.v4.objects.ProjectMember] = project.members.list(all=True)
-        labels: [gitlab.v4.objects.ProjectLabel] = project.labels.list(all=True)
-        milestones: [gitlab.v4.objects.ProjectMilestone] = project.milestones.list(all=True)
-        issues: [gitlab.v4.objects.ProjectIssue] = project.issues.list(all=True)
+        try:
+            collaborators: [gitlab.v4.objects.ProjectMember] = project.members.list(all=True)
+            labels: [gitlab.v4.objects.ProjectLabel] = project.labels.list(all=True)
+            milestones: [gitlab.v4.objects.ProjectMilestone] = project.milestones.list(all=True)
+            issues: [gitlab.v4.objects.ProjectIssue] = project.issues.list(all=True)
 
-        print("Importing project " + name_clean(project.name) + " from owner " + name_clean(project.namespace['name']))
-        print("Found " + str(len(collaborators)) + " collaborators for project " + name_clean(project.name))
-        print("Found " + str(len(labels)) + " labels for project " + name_clean(project.name))
-        print("Found " + str(len(milestones)) + " milestones for project " + name_clean(project.name))
-        print("Found " + str(len(issues)) + " issues for project " + name_clean(project.name))
+            print("Importing project " + name_clean(project.name) + " from owner " + name_clean(project.namespace['name']))
+            print("Found " + str(len(collaborators)) + " collaborators for project " + name_clean(project.name))
+            print("Found " + str(len(labels)) + " labels for project " + name_clean(project.name))
+            print("Found " + str(len(milestones)) + " milestones for project " + name_clean(project.name))
+            print("Found " + str(len(issues)) + " issues for project " + name_clean(project.name))
 
-        projectOwner = name_clean(project.namespace['name'])
-        projectName = name_clean(project.name)
+        except Exception as e:
+            print("This project failed: \n {}, \n reason {}: ".format(project.name, e))
+        
+        else:
+            projectOwner = name_clean(project.namespace['name'])
+            projectName = name_clean(project.name)
 
-        # import project repo
-        _import_project_repo(gitea_api, project)
+            # import project repo
+            _import_project_repo(gitea_api, project)
 
-        # import collaborators
-        _import_project_repo_collaborators(gitea_api, collaborators, project)
+            # import collaborators
+            _import_project_repo_collaborators(gitea_api, collaborators, project)
 
-        # import labels
-        _import_project_labels(gitea_api, labels, projectOwner, projectName)
+            # import labels
+            _import_project_labels(gitea_api, labels, projectOwner, projectName)
 
-        # import milestones
-        _import_project_milestones(gitea_api, milestones, projectOwner, projectName)
+            # import milestones
+            _import_project_milestones(gitea_api, milestones, projectOwner, projectName)
 
-        # import issues
-        _import_project_issues(gitea_api, issues, projectOwner, projectName)
+            # import issues
+            _import_project_issues(gitea_api, issues, projectOwner, projectName)
 
 
 #
