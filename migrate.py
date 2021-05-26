@@ -19,15 +19,15 @@ GLOBAL_ERROR_COUNT = 0
 #######################
 # CONFIG SECTION START
 #######################
-GITLAB_URL = 'https://gitlab.source.com'
-GITLAB_TOKEN = 'gitlab token'
+GITLAB_URL = os.getenv('GITLAB_URL', 'https://gitlab.source.com')
+GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', 'gitlab token')
 
 # needed to clone the repositories, keep empty to try publickey (untested)
-GITLAB_ADMIN_USER = 'admin username'
-GITLAB_ADMIN_PASS = 'admin password'
+GITLAB_ADMIN_USER = os.getenv('GITLAB_ADMIN_USER', 'admin username')
+GITLAB_ADMIN_PASS = os.getenv('GITLAB_ADMIN_PASS', 'admin password')
 
-GITEA_URL = 'https://gitea.dest.com'
-GITEA_TOKEN = 'gitea token'
+GITEA_URL = os.getenv('GITEA_URL','https://gitea.dest.com')
+GITEA_TOKEN = os.getenv('GITEA_TOKEN', 'gitea token')
 #######################
 # CONFIG SECTION END
 #######################

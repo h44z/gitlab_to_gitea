@@ -1,0 +1,12 @@
+version: "3.7"
+
+services:
+  sync:
+    build: 
+        context: .
+        dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    command: python3 migrate.py
+    network_mode: host
+    env_file: .env
