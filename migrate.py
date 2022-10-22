@@ -8,6 +8,7 @@ import json
 import dateutil.parser
 import datetime
 import re
+from typing import List
 
 import gitlab  # pip install python-gitlab
 import gitlab.v4.objects
@@ -28,6 +29,16 @@ GITLAB_ADMIN_PASS = os.getenv('GITLAB_ADMIN_PASS', 'admin password')
 
 GITEA_URL = os.getenv('GITEA_URL','https://gitea.dest.com')
 GITEA_TOKEN = os.getenv('GITEA_TOKEN', 'gitea token')
+
+# For migrating from a self-hosted gitlab instance, use MIGRATE_BY_GROUPS=0
+# For migrating from the global gitlab.com, use MIGRATE_BY_GROUPS=1 which
+# migrates only projects and users which belong to groups accessible to the
+# user of the GITLAB_TOKEN.
+MIGRATE_BY_GROUPS = (os.getenv('MIGRATE_BY_GROUPS', '0')) == '1'
+
+# Migrated projects can be automatically archived on gitlab to avoid users pushing
+# there commits after the migration to gitea
+GITLAB_ARCHIVE_MIGRATED_PROJECTS = (os.getenv('GITLAB_ARCHIVE_MIGRATED_PROJECTS', '0')) == '1'
 #######################
 # CONFIG SECTION END
 #######################
@@ -48,11 +59,59 @@ def main():
     gt_version = gt.get('/version').json()
     print_info("Connected to Gitea, version: " + str(gt_version['version']))
 
+
+    print('Gathering projects and users...')
+    users: List[gitlab.v4.objects.User] = []
+    groups: List[gitlab.v4.objects.Group] = gl.groups.list(all=True)
+    projects: List[gitlab.v4.objects.Project] = []
+
+    if MIGRATE_BY_GROUPS:
+        user_ids: Dict[int, int] = {}
+        project_ids: Dict[int, int] = {}
+        groups = gl.groups.list(all=True)
+        for group in groups:
+            print('group:', group.full_path)
+            for member in group.members.list(iterator=True):
+                print('    member:', member.username)
+                user_ids[member.id] = 1
+            for group_project in group.projects.list(iterator=True):
+                print('    group_project:', group_project.name_with_namespace)
+                project_ids[group_project.id] = 1
+                project = gl.projects.get(id=group_project.id)
+                print('    project:', project.name_with_namespace)
+                for member in project.members.list(iterator=True):
+                    print('        member:', member.username)
+                    user_ids[member.id] = 1
+                for user in project.users.list(iterator=True):
+                    print('        user:', user.username)
+                    user_ids[user.id] = 1
+
+        for user_id in user_ids:
+            user = gl.users.get(id=user_id)
+            print('user_id:',user_id,' user:',user.username)
+            users.append(user)
+            for project in user.projects.list(iterator=True):
+                print('    project:',project.name_with_namespace)
+
+        print()
+
+        for project_id in project_ids:
+            project = gl.projects.get(id=project_id)
+            print('project_id:',project_id,' project:',project.name_with_namespace,' archived:',project.archived)
+            projects.append(project)
+
+    else:
+        users = gitlab_api.users.list(all=True)
+        projects = gitlab_api.projects.list(all=True)
+
+    print('Gathering projects and users...done')
+
+
     # IMPORT USERS AND GROUPS
-    import_users_groups(gl, gt)
+    import_users_groups(gl, gt, users, groups)
 
     # IMPORT PROJECTS
-    import_projects(gl, gt)
+    import_projects(gl, gt, projects)
 
     print()
     if GLOBAL_ERROR_COUNT == 0:
@@ -536,11 +595,7 @@ def _import_group_members(gitea_api: pygitea, members: [gitlab.v4.objects.GroupM
 # Import functions
 #
 
-def import_users_groups(gitlab_api: gitlab.Gitlab, gitea_api: pygitea, notify=False):
-    # read all users
-    users: [gitlab.v4.objects.User] = gitlab_api.users.list(all=True)
-    groups: [gitlab.v4.objects.Group] = gitlab_api.groups.list(all=True)
-
+def import_users_groups(gitlab_api: gitlab.Gitlab, gitea_api: pygitea, users: List[gitlab.v4.objects.User], groups: List[gitlab.v4.objects.Group], notify=False):
     print("Found " + str(len(users)) + " gitlab users as user " + gitlab_api.user.username)
     print("Found " + str(len(groups)) + " gitlab groups as user " + gitlab_api.user.username)
 
@@ -551,13 +606,16 @@ def import_users_groups(gitlab_api: gitlab.Gitlab, gitea_api: pygitea, notify=Fa
     _import_groups(gitea_api, groups)
 
 
-def import_projects(gitlab_api: gitlab.Gitlab, gitea_api: pygitea):
-    # read all projects and their issues
-    projects: gitlab.v4.objects.Project = gitlab_api.projects.list(all=True)
-
+def import_projects(gitlab_api: gitlab.Gitlab, gitea_api: pygitea, projects: List[gitlab.v4.objects.Project]):
     print("Found " + str(len(projects)) + " gitlab projects as user " + gitlab_api.user.username)
 
     for project in projects:
+        if GITLAB_ARCHIVE_MIGRATED_PROJECTS:
+            try:
+                project.archive()
+            except Exception as e:
+                print("WARNING: Failed to archive project '{}', reason: {}".format(project.name, e))
+        
         try:
             collaborators: [gitlab.v4.objects.ProjectMember] = project.members.list(all=True)
             labels: [gitlab.v4.objects.ProjectLabel] = project.labels.list(all=True)
