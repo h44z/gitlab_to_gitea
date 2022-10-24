@@ -101,8 +101,8 @@ def main():
             projects.append(project)
 
     else:
-        users = gitlab_api.users.list(all=True)
-        projects = gitlab_api.projects.list(all=True)
+        users = gl.users.list(all=True)
+        projects = gl.projects.list(all=True)
 
     print('Gathering projects and users...done')
 
