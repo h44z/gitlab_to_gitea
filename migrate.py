@@ -20,6 +20,7 @@ GLOBAL_ERROR_COUNT = 0
 #######################
 # CONFIG SECTION START
 #######################
+REPOSITORY_MIRROR = (os.getenv('REPOSITORY_MIRROR', 'false')) == 'true' # if true, the repository will be mirrored
 GITLAB_URL = os.getenv('GITLAB_URL', 'https://gitlab.source.com')
 GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', 'gitlab token')
 
@@ -460,7 +461,7 @@ def _import_project_repo(gitea_api: pygitea, project: gitlab.v4.objects.Project)
                 "auth_username": GITLAB_ADMIN_USER,
                 "clone_addr": clone_url,
                 "description": description,
-                "mirror": False,
+                "mirror": REPOSITORY_MIRROR,
                 "private": private,
                 "repo_name": name_clean(project.name),
                 "uid": owner['id']
