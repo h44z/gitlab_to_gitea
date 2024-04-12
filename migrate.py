@@ -20,6 +20,11 @@ GLOBAL_ERROR_COUNT = 0
 #######################
 # CONFIG SECTION START
 #######################
+
+# Gitea user to use as a fallback for groups
+# for cases where the user's permissions are too limited to access group member details on GitLab.
+GITEA_FALLBACK_GROUP_MEMBER = os.getenv('GITEA_FALLBACK_GROUP_MEMBER', 'gitea_admin')
+
 REPOSITORY_MIRROR = (os.getenv('REPOSITORY_MIRROR', 'false')) == 'true' # if true, the repository will be mirrored
 GITLAB_URL = os.getenv('GITLAB_URL', 'https://gitlab.source.com')
 GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', 'gitlab token')
@@ -76,9 +81,14 @@ def main():
         groups = gl.groups.list(all=True)
         for group in groups:
             print('group:', group.full_path)
-            for member in group.members.list(iterator=True):
-                print('    member:', member.username)
-                user_ids[member.id] = 1
+            # ıf we do not have access memberlist do not run member creating
+            try:
+                for member in group.members.list(iterator=True):
+                    print('    member:', member.username)
+                    user_ids[member.id] = 1
+            except Exception as e:
+                print("Skipping group member import for group " + group.full_path + " due to error: " + str(e))
+            
             for group_project in group.projects.list(iterator=True):
                 print('    group_project:', group_project.name_with_namespace)
                 project_ids[group_project.id] = 1
@@ -555,8 +565,11 @@ def _import_user_keys(gitea_api: pygitea, keys: [gitlab.v4.objects.UserKey], use
 
 def _import_groups(gitea_api: pygitea, groups: [gitlab.v4.objects.Group]):
     for group in groups:
-        members: [gitlab.v4.objects.GroupMember] = group.members.list(all=True)
-
+        try:
+            members: [gitlab.v4.objects.GroupMember] = group.members.list(all=True)
+        except Exception as e:
+            print("Skipping group member import for group " + group.full_path + " due to error: " + str(e))
+            continue
         print("Importing group " + name_clean(group.name) + "...")
         print("Found " + str(len(members)) + " gitlab members for group " + name_clean(group.name))
 
@@ -584,6 +597,9 @@ def _import_group_members(gitea_api: pygitea, members: [gitlab.v4.objects.GroupM
         first_team = existing_teams[0]
         print("Organization teams fetched, importing users to first team: " + first_team['name'])
 
+        # if members empty just add the fallback user
+        if len(members) == 0:
+            members = [{"username": GITEA_FALLBACK_GROUP_MEMBER}]
         # add members to teams
         for member in members:
             if not member_exists(gitea_api, member.username, first_team['id']):
