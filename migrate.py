@@ -20,8 +20,9 @@ GLOBAL_ERROR_COUNT = 0
 #######################
 # CONFIG SECTION START
 #######################
-# Gitlab user to use as a fallback for missing members for groups
-GITLAB_FALLBACK_USERNAME = os.getenv('GITLAB_FALLBACK_USERNAME', 'gitea_admin')
+# Gitea user to use as a fallback for groups
+# for cases where the user's permissions are too limited to access group member details on GitLab.
+GITEA_FALLBACK_GROUP_MEMBER = os.getenv('GITEA_FALLBACK_GROUP_MEMBER', 'gitea_admin')
 GITLAB_URL = os.getenv('GITLAB_URL', 'https://gitlab.source.com')
 GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', 'gitlab token')
 
@@ -591,7 +592,7 @@ def _import_group_members(gitea_api: pygitea, members: [gitlab.v4.objects.GroupM
 
         # if members empty just add the fallback user
         if len(members) == 0:
-            members = [{"username": GITLAB_FALLBACK_USERNAME}]
+            members = [{"username": GITEA_FALLBACK_GROUP_MEMBER}]
         # add members to teams
         for member in members:
             if not member_exists(gitea_api, member.username, first_team['id']):
