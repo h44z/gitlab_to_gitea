@@ -20,9 +20,12 @@ GLOBAL_ERROR_COUNT = 0
 #######################
 # CONFIG SECTION START
 #######################
+
 # Gitea user to use as a fallback for groups
 # for cases where the user's permissions are too limited to access group member details on GitLab.
 GITEA_FALLBACK_GROUP_MEMBER = os.getenv('GITEA_FALLBACK_GROUP_MEMBER', 'gitea_admin')
+
+REPOSITORY_MIRROR = (os.getenv('REPOSITORY_MIRROR', 'false')) == 'true' # if true, the repository will be mirrored
 GITLAB_URL = os.getenv('GITLAB_URL', 'https://gitlab.source.com')
 GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', 'gitlab token')
 
@@ -30,6 +33,10 @@ GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', 'gitlab token')
 GITLAB_ADMIN_USER = os.getenv('GITLAB_ADMIN_USER', 'admin username')
 GITLAB_ADMIN_PASS = os.getenv('GITLAB_ADMIN_PASS', 'admin password')
 
+if GITLAB_URL == 'https://gitlab.com/' and GITLAB_ADMIN_USER == '' and GITLAB_ADMIN_PASS == '':
+    # see https://forum.gitlab.com/t/how-to-git-clone-via-https-with-personal-access-token-in-private-project/43418/4
+    GITLAB_ADMIN_USER = 'oauth2'
+    GITLAB_ADMIN_PASS = GITLAB_TOKEN
 GITEA_URL = os.getenv('GITEA_URL','https://gitea.dest.com')
 GITEA_TOKEN = os.getenv('GITEA_TOKEN', 'gitea token')
 
@@ -468,7 +475,7 @@ def _import_project_repo(gitea_api: pygitea, project: gitlab.v4.objects.Project)
                 "auth_username": GITLAB_ADMIN_USER,
                 "clone_addr": clone_url,
                 "description": description,
-                "mirror": False,
+                "mirror": REPOSITORY_MIRROR,
                 "private": private,
                 "repo_name": name_clean(project.name),
                 "uid": owner['id']
