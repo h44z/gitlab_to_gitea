@@ -445,7 +445,7 @@ def _import_project_issues(gitea_api: pygitea, issues: [gitlab.v4.objects.Projec
 
 
 def _import_project_repo(gitea_api: pygitea, project: gitlab.v4.objects.Project):
-    if not repo_exists(gitea_api, name_clean(project.namespace['name']), name_clean(project.name)):
+    if not repo_exists(gitea_api, name_clean(project.namespace['path']), name_clean(project.name)):
         clone_url = project.http_url_to_repo
         if GITLAB_ADMIN_PASS == '' and GITLAB_ADMIN_USER == '':
             clone_url = project.ssh_url_to_repo
@@ -637,7 +637,7 @@ def import_projects(gitlab_api: gitlab.Gitlab, gitea_api: pygitea, projects: Lis
             print("This project failed: \n {}, \n reason {}: ".format(project.name, e))
         
         else:
-            projectOwner = name_clean(project.namespace['name'])
+            projectOwner = name_clean(project.namespace['path'])
             projectName = name_clean(project.name)
 
             # import project repo
