@@ -31,3 +31,50 @@ python3 -m pip install -r requirements.txt
 ```
 
 Then start the migration script `python3 migrate.py`.
+
+1、edit migrate.py  
+```bash
+# gitlab 
+GITLAB_URL = os.getenv('GITLAB_URL', 'https://gitlab.source.com')
+GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', 'gitlab token')
+
+# needed to clone the repositories, keep empty to try publickey (untested)
+GITLAB_ADMIN_USER = os.getenv('GITLAB_ADMIN_USER', 'admin username')
+GITLAB_ADMIN_PASS = os.getenv('GITLAB_ADMIN_PASS', 'admin password')
+
+# gitea
+GITEA_URL = os.getenv('GITEA_URL','https://gitea.dest.com')
+GITEA_TOKEN = os.getenv('GITEA_TOKEN', 'gitea token')
+```
+
+2、Test Gitea migrate api
+url:
+http://192.168.50.203:3000/api/v1/repos/migrate?access_token=bac1a114d441a31ae812c8aa2f4002eb89466388
+
+method:
+POST
+
+header:  
+[{"key":"Content-Type","value":"application/json"}]
+
+Data:
+{
+  "auth_password": "gitlab password",
+  "auth_token": "gitlab token",
+  "auth_username": "root",
+  "clone_addr": "clone_addr gitlab addr",
+  "description": "1222222",
+  "issues": false,
+  "labels": false,
+  "lfs": false,
+  "milestones": false,
+  "mirror": false,
+  "private": true,
+  "pull_requests": false,
+  "releases": true,
+  "repo_name": "test1",
+  "repo_owner": "root",
+  "service": "git",
+  "uid": 1,
+  "wiki": true
+}

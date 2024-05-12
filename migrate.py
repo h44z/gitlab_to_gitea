@@ -472,6 +472,7 @@ def _import_project_repo(gitea_api: pygitea, project: gitlab.v4.objects.Project)
 
             import_response: requests.Response = gitea_api.post("/repos/migrate", json={
                 "auth_password": GITLAB_ADMIN_PASS,
+                "auth_token": GITLAB_TOKEN,
                 "auth_username": GITLAB_ADMIN_USER,
                 "clone_addr": clone_url,
                 "description": description,
