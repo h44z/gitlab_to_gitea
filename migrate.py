@@ -60,7 +60,7 @@ def main():
     print()
 
     # private token or personal token authentication
-    gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN)
+    gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN, keep_base_url=True)
     gl.auth()
     assert(isinstance(gl.user, gitlab.v4.objects.CurrentUser))
     print_info("Connected to Gitlab, version: " + str(gl.version()))
