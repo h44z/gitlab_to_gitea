@@ -12,7 +12,7 @@ This script support migrating the following data:
  - Groups
  - Public SSH keys
 
-Tested with Gitlab Version 13.0.6 and Gitea Version 1.11.6.
+Tested with Gitlab Version 17.1.1 and Gitea Version 1.22.1
 
 ## Usage
 Change items in the config section of the script.
