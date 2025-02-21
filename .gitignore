@@ -121,3 +121,5 @@ dmypy.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
+migration-env/*
+.env
